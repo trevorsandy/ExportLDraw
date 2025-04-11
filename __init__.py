@@ -1,12 +1,15 @@
+# https://docs.blender.org/api/current/bpy.types.AddonPreferences.html
+# https://github.com/blender/blender/blob/9c0bffcc89f174f160805de042b00ae7c201c40b/scripts/startup/bl_ui/space_userpref.py#L2230-L2306
 bl_info = {
     "name": "Export LDraw",
     "author": "cuddlyogre",
-    "version": (0, 1),
+    "version": (25, 4, 1103),
     "blender": (2, 82, 0),
     "location": "File > Import-Export > LDraw (.mpd/.ldr/.l3b/.dat)",
     "description": "Imports and Exports LDraw Models",
     "warning": "",
-    "wiki_url": "",
+    "doc_url": "",
+    "tracker_url": "https://github.com/cuddlyogre/ExportLDraw",
     "category": "Import-Export",
 }
 
