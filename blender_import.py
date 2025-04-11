@@ -85,10 +85,6 @@ def do_import(filepath, color_code="16", return_mesh=False):
 
 
 def __scene_setup():
-    print('==========')
-    print(bpy.app.version)
-    print(bpy.app.version < (4, 3))
-    print('==========')
     if bpy.app.version < (4, 3):
         bpy.context.scene.eevee.use_ssr = True
         bpy.context.scene.eevee.use_ssr_refraction = True
