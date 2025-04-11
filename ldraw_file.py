@@ -120,7 +120,7 @@ class LDrawFile:
                 model_ldr = zip.read('model.ldr').decode('utf-8-sig')
                 return cls.__read_file(model_ldr.splitlines(), filename)
 
-        with open(filepath, 'r', encoding='utf-8') as file:
+        with open(filepath, 'r', encoding='utf-8-sig') as file:
             return cls.__read_file(file, filename)
 
     @classmethod

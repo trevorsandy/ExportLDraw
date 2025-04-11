@@ -64,7 +64,7 @@ def write_json(filepath, obj, indent=None, do_print=False):
     try:
         full_path = os.path.join(APP_ROOT, filepath)
         Path(os.path.dirname(full_path)).mkdir(parents=True, exist_ok=True)
-        with open(full_path, 'w', encoding='utf-8', newline="\n") as file:
+        with open(full_path, 'w', encoding='utf-8-sig', newline="\n") as file:
             j = json.dumps(obj, indent=indent, ensure_ascii=False)
             if do_print:
                 print(j)
@@ -78,7 +78,7 @@ def write_json(filepath, obj, indent=None, do_print=False):
 def read_json(filepath, default=None):
     try:
         full_path = os.path.join(APP_ROOT, filepath)
-        with open(full_path, 'r', encoding='utf-8') as file:
+        with open(full_path, 'r', encoding='utf-8-sig') as file:
             return json.load(file)
     except Exception as e:
         print(e)
