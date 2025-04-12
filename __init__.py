@@ -13,6 +13,16 @@ bl_info = {
     "category": "Import-Export",
 }
 
+if "bpy" in locals():
+    import importlib
+    importlib.reload(ldraw_props)
+    importlib.reload(operator_import)
+    importlib.reload(operator_export)
+    importlib.reload(operator_panel_ldraw)
+    importlib.reload(ldraw_operators)
+
+import bpy
+
 from . import ldraw_props
 from . import operator_import
 from . import operator_export
