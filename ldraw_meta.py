@@ -1,6 +1,7 @@
 import bpy
 import mathutils
 
+from . import matrices
 from .import_options import ImportOptions
 from .pe_texmap import PETexInfo, PETexmap
 from .texmap import TexMap
@@ -253,17 +254,17 @@ def meta_leocad_camera(child_node, matrix):
             _params = _params[2:]
         elif _params[0] == "position":
             (x, y, z) = map(float, _params[1:4])
-            vector = matrix @ mathutils.Vector((x, y, z))
+            vector = matrix @ mathutils.Vector((x, y, z)) @ matrices.rotation_matrix
             camera.position = vector
             _params = _params[4:]
         elif _params[0] == "target_position":
             (x, y, z) = map(float, _params[1:4])
-            vector = matrix @ mathutils.Vector((x, y, z))
+            vector = matrix @ mathutils.Vector((x, y, z)) @ matrices.rotation_matrix
             camera.target_position = vector
             _params = _params[4:]
         elif _params[0] == "up_vector":
             (x, y, z) = map(float, _params[1:4])
-            vector = matrix @ mathutils.Vector((x, y, z))
+            vector = matrix @ mathutils.Vector((x, y, z)) @ matrices.rotation_matrix
             camera.up_vector = vector
             _params = _params[4:]
         elif _params[0] == "orthographic":
