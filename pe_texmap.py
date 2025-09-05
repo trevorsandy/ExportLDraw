@@ -33,7 +33,7 @@ class PETexmap:
             loop[uv_layer].uv = uvs[p]
 
     @staticmethod
-    def build_pe_texmap(ldraw_node, child_node, winding):
+    def build_pe_texmap(ldraw_node, child_node, winding, pe_tex_info):
         # child_node is a 3 or 4 line
         clean_line = child_node.line
         _params = clean_line.split()[2:]
@@ -41,9 +41,7 @@ class PETexmap:
         vert_count = len(child_node.vertices)
 
         pe_texmap = None
-        for pp in ldraw_node.pe_tex_info:
-            p = pp.clone()
-
+        for p in pe_tex_info:
             # if we have uv data and a pe_tex_info, otherwise pass
             # # custom minifig head > 3626tex.dat (has no pe_tex) > 3626texpole.dat (has no uv data)
             if len(_params) == 15:  # use uvs provided in file
@@ -63,34 +61,18 @@ class PETexmap:
                         pe_texmap.uvs.append(uv)
 
             elif p.matrix:
-                if p.point_min is None: continue
-                if p.point_max is None: continue
-                if p.point_diff is None: continue
-                # if p.box_extents is None: continue
-
-                # TODO: calculate uvs
                 pe_texmap = PETexmap()
                 pe_texmap.texture = p.image
 
-                p.matrix = p.matrix or mathutils.Matrix.Identity(4)
                 (translation, rotation, scale) = (ldraw_node.matrix @ p.matrix).decompose()
 
-                # p.box_extents = scale
-                # translation.y = -translation.y
-                # if ldraw_node.pe_tex_next_shear:
-                #     p.box_extents = scale * mathutils.Vector((p.point_diff.x / 2, 0.25, -p.point_diff.y / 2))
-
                 mirroring = mathutils.Vector((1, 1, 1))
-                # for dim in range(3):
-                #     if scale[dim] < 0:
-                #         mirroring[dim] *= -1
-                #         scale *= -1
-
                 rhs = mathutils.Matrix.LocRotScale(translation, rotation, mirroring)
-                p.matrix = ldraw_node.matrix.inverted() @ rhs
-                p.matrix_inverse = p.matrix.inverted()
 
-                vertices = [p.matrix_inverse @ v for v in child_node.vertices]
+                matrix = ldraw_node.matrix.inverted() @ rhs
+                matrix_inverse = matrix.inverted()
+
+                vertices = [matrix_inverse @ v for v in child_node.vertices]
 
                 if winding == "CW":
                     if vert_count == 3:
