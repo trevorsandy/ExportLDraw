@@ -2,17 +2,15 @@ import mathutils
 
 
 class PETexInfo:
-    def __init__(self, point_min=None, point_max=None, point_diff=None, box_extents=None, matrix=None, matrix_inverse=None, image=None):
-        self.point_min = point_min  # bottom corner of bounding box
-        self.point_max = point_max  # top corner of bounding box
-        self.point_diff = point_diff  # center of bounding box
-        self.box_extents = box_extents
-        self.matrix = matrix
-        self.matrix_inverse = matrix_inverse
-        self.image = image
+    def __init__(self):
+        self.tex_path = None
+        self.next_shear = False
+        self.matrix = None
+        self.image = None
 
-    def clone(self):
-        return PETexInfo(self.point_min, self.point_max, self.point_diff, self.box_extents, self.matrix, self.matrix_inverse, self.image)
+        self.point_min = None  # bottom corner of bounding box
+        self.point_max = None  # top corner of bounding box
+        self.point_diff = None  # center of bounding box
 
 
 class PETexmap:
@@ -33,21 +31,20 @@ class PETexmap:
             loop[uv_layer].uv = uvs[p]
 
     @staticmethod
-    def build_pe_texmap(ldraw_node, child_node, winding, pe_tex_info):
+    def build_pe_texmap(ldraw_node, child_node, winding, pe_tex_info_list):
         # child_node is a 3 or 4 line
         clean_line = child_node.line
         _params = clean_line.split()[2:]
 
         vert_count = len(child_node.vertices)
 
-        pe_texmap = None
-        for p in pe_tex_info:
+        pe_texmap = PETexmap()
+        for pe_tex_info in pe_tex_info_list:
+            pe_texmap.texture = pe_tex_info.image
+
             # if we have uv data and a pe_tex_info, otherwise pass
             # # custom minifig head > 3626tex.dat (has no pe_tex) > 3626texpole.dat (has no uv data)
             if len(_params) == 15:  # use uvs provided in file
-                pe_texmap = PETexmap()
-                pe_texmap.texture = p.image
-
                 for i in range(vert_count):
                     if vert_count == 3:
                         x = round(float(_params[i * 2 + 9]), 3)
@@ -60,11 +57,8 @@ class PETexmap:
                         uv = mathutils.Vector((x, y))
                         pe_texmap.uvs.append(uv)
 
-            elif p.matrix:
-                pe_texmap = PETexmap()
-                pe_texmap.texture = p.image
-
-                (translation, rotation, scale) = (ldraw_node.matrix @ p.matrix).decompose()
+            elif pe_tex_info.matrix:
+                (translation, rotation, scale) = (ldraw_node.matrix @ pe_tex_info.matrix).decompose()
 
                 mirroring = mathutils.Vector((1, 1, 1))
                 rhs = mathutils.Matrix.LocRotScale(translation, rotation, mirroring)
@@ -101,8 +95,8 @@ class PETexmap:
                 if dot <= 0.001: continue
 
                 for vert in vertices:
-                    u = (vert.x - p.point_min.x) / p.point_diff.x
-                    v = (vert.z - -p.point_min.y) / -p.point_diff.y
+                    u = (vert.x - pe_tex_info.point_min.x) / pe_tex_info.point_diff.x
+                    v = (vert.z - -pe_tex_info.point_min.y) / -pe_tex_info.point_diff.y
                     uv = mathutils.Vector((u, v))
                     pe_texmap.uvs.append(uv)
 
