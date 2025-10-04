@@ -230,7 +230,7 @@ class LDrawProps(bpy.types.PropertyGroup):
     #     "Wing",
     #     "Znap",
     # ]
-    category:  bpy.props.StringProperty(
+    category: bpy.props.StringProperty(
         name="Category",
         description="Category",
         default="",
@@ -297,6 +297,18 @@ class LDrawProps(bpy.types.PropertyGroup):
     #     subtype='COLOR',
     #     default=[0.0, 0.0, 0.0],
     # )
+
+    texture_format_items = (
+        ('LDraw', 'LDraw', ''),
+        ('Stud.io', 'Stud.io', ''),
+        ('Skip', 'Skip', ''),
+    )
+    texture_format: bpy.props.EnumProperty(
+        name="Texture format",
+        description="Texture format",
+        items=texture_format_items,
+        default=texture_format_items[1][0],
+    )
 
 
 classesToRegister = [
