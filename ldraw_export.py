@@ -277,9 +277,11 @@ def __export_polygons(obj, aa, lines):
 
         if polygon.material_index + 1 <= len(mesh.materials):
             material = mesh.materials[polygon.material_index]
-            if strings.ldraw_color_code_key in material:
-                color_code = str(material[strings.ldraw_color_code_key])
-                color = LDrawColor.get_color(color_code)
+            # sometimes a material slot has been added but no material has been assigned
+            if material is not None:
+                if strings.ldraw_color_code_key in material:
+                    color_code = str(material[strings.ldraw_color_code_key])
+                    color = LDrawColor.get_color(color_code)
 
         if color.code != "16":
             color_code = color.code
