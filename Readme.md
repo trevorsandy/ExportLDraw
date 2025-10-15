@@ -32,8 +32,10 @@ to handle the materials. I'm leaning toward creating a simplified version of the
 
 You are able to choose the logo you want to show on studs, or no logo or stud at all.
 
-Importing TEXMAP is fully supported, including embedded image data using the DATA meta command. This includes planar, 
-cylindrical, and spherical projections. Thanks to https://github.com/trevorsandy/lpub3d for the cylindrical and spherical math. 
+Importing TEXMAP is fully supported, including embedded image data using the DATA meta command. If you are using an external PNG image, make sure that the image is in the same folder as the .dat file or in **parts/textures**
+in the LDraw folder. 
+
+**PLANAR**, **CYLINDRICAL**, and **SPHERICAL** projections are supported. Many thanks to https://github.com/trevorsandy/lpub3d for the cylindrical and spherical math.
 
 ![Examples of TEXMAP using 27062.dat and 27062p01.dat](examples/import/texmap.jpg)
 
@@ -65,8 +67,10 @@ see the problem.
 **Exporting Stud.io Decals**  
 Exporting Stud.io decals is supported, but support is more limited than the full spec allows. The sections of the part
 that are textured must joined as one mesh, triangulated, uv unwrapped, and if there is more than one image for the material, 
-the textures have to be baked into a single image. Then, in the **LDraw** panel, make sure **Export polygons** is checked 
-for everything that is to be exported and **Texture format** is set to **Stud.io**.
+the textures have to be baked into a single image. **Make sure your UVs are all between 0 and 1, otherwise, the texture will be
+drawn incorrectly in Stud.io**. Then, in the **LDraw** panel, make sure **Export polygons** is checked 
+for everything that is to be exported and **Texture format** is set to **Stud.io**. Leave the color code for that decal materials
+as 16, or else the decal will be drawn as that color code in PartDesigner and Stud.io.
 ![test1234.dat test inside of Blender](examples/export/test1234_blender.png)
 ![test1234.dat test inside of Part Designer](examples/export/test1234_part_designer.png)
 
