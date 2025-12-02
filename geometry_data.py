@@ -19,32 +19,36 @@ class FaceData:
         if winding == "CW":
             if vert_count == 3:
                 vertices = [
-                    matrix @ child_node.vertices[0],
-                    matrix @ child_node.vertices[2],
-                    matrix @ child_node.vertices[1],
+                    child_node.vertices[0],
+                    child_node.vertices[2],
+                    child_node.vertices[1],
                 ]
+                vertices = [matrix @ v for v in vertices]
             elif vert_count == 4:
                 vertices = [
-                    matrix @ child_node.vertices[0],
-                    matrix @ child_node.vertices[3],
-                    matrix @ child_node.vertices[2],
-                    matrix @ child_node.vertices[1],
+                    child_node.vertices[0],
+                    child_node.vertices[3],
+                    child_node.vertices[2],
+                    child_node.vertices[1],
                 ]
+                vertices = [matrix @ v for v in vertices]
                 FaceData.fix_bowties(vertices)
         else:  # winding == "CCW" or winding is None:
             if vert_count == 3:
                 vertices = [
-                    matrix @ child_node.vertices[0],
-                    matrix @ child_node.vertices[1],
-                    matrix @ child_node.vertices[2],
+                    child_node.vertices[0],
+                    child_node.vertices[1],
+                    child_node.vertices[2],
                 ]
+                vertices = [matrix @ v for v in vertices]
             elif vert_count == 4:
                 vertices = [
-                    matrix @ child_node.vertices[0],
-                    matrix @ child_node.vertices[1],
-                    matrix @ child_node.vertices[2],
-                    matrix @ child_node.vertices[3],
+                    child_node.vertices[0],
+                    child_node.vertices[1],
+                    child_node.vertices[2],
+                    child_node.vertices[3],
                 ]
+                vertices = [matrix @ v for v in vertices]
                 FaceData.fix_bowties(vertices)
 
         return vertices
