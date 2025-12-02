@@ -143,9 +143,10 @@ class LDrawFile:
                             base64_data = texmap.clean_line(strip_line)
                             current_data.append(base64_data)
                         except IndexError as e:
-                            print(e)
-                            import traceback
-                            print(traceback.format_exc())
+                            if ImportOptions.print_errors:
+                                print(e)
+                                import traceback
+                                print(traceback.format_exc())
                         continue
                 else:
                     base64_handler.named_png_from_base64_str(current_data_filename, "".join(current_data))
@@ -255,9 +256,10 @@ class LDrawFile:
                 if self.__line_texmap(clean_line): continue
                 if self.__line_stud_io(clean_line): continue
             except Exception as e:
-                print(e)
-                import traceback
-                print(traceback.format_exc())
+                if ImportOptions.print_errors:
+                    print(e)
+                    import traceback
+                    print(traceback.format_exc())
                 continue
 
     # always return false so that the rest of the line types are parsed even if this is true

@@ -3,6 +3,7 @@
 import math
 import struct
 from collections import namedtuple
+from .import_options import ImportOptions
 
 try:
     from . import helpers
@@ -261,9 +262,10 @@ class LDrawColor:
                 color_code = cls.parse_color(clean_line)
                 return cls.__colors[color_code]
             except Exception as e:
-                print(e)
-                import traceback
-                print(traceback.format_exc())
+                if ImportOptions.print_errors:
+                    print(e)
+                    import traceback
+                    print(traceback.format_exc())
 
         print(f"Bad color code: {color_code}")
         color_code = '99999'
@@ -338,19 +340,21 @@ class LDrawColor:
             hbcolor = f"0x{hex(bcolor.r)[2:]}{hex(bcolor.g)[2:]}{hex(bcolor.b)[2:]}"
             hex_digits = cls.__extract_hex_digits(hbcolor)
         except ValueError as e:
-            print(e)
-            import traceback
-            print(traceback.format_exc())
-            # color code is not an int
+            """color code is not an int"""
+            if ImportOptions.print_errors:
+                print(e)
+                import traceback
+                print(traceback.format_exc())
         except IndexError as e:
-            print(e)
-            import traceback
-            print(traceback.format_exc())
-            # color code indices are not in the colors list
-            print(color_code)
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            print(frameinfo.filename, frameinfo.lineno)
+            """color code indices are not in the colors list"""
+            if ImportOptions.print_errors:
+                print(e)
+                import traceback
+                print(traceback.format_exc())
+                print(color_code)
+                from inspect import currentframe, getframeinfo
+                frameinfo = getframeinfo(currentframe())
+                print(frameinfo.filename, frameinfo.lineno)
 
         return hex_digits
 
@@ -372,9 +376,10 @@ class LDrawColor:
             hicolor_code = hex(icolor_code)
             hex_digits = cls.__extract_hex_digits(hicolor_code)
         except ValueError as e:
-            print(e)
-            import traceback
-            print(traceback.format_exc())
+            if ImportOptions.print_errors:
+                print(e)
+                import traceback
+                print(traceback.format_exc())
 
         return hex_digits
 

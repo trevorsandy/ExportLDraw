@@ -127,6 +127,9 @@ class ImportOptions:
     defaults["scale_strategy"] = 0
     scale_strategy = defaults["scale_strategy"]
 
+    defaults["print_errors"] = False  # True False
+    print_errors = defaults["print_errors"]
+
     @staticmethod
     def scale_strategy_value():
         return ImportOptions.scale_strategy_choices[ImportOptions.scale_strategy][0]
