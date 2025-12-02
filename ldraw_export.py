@@ -28,7 +28,7 @@ def do_export(filepath):
     active_object = bpy.context.object
     all_objects = bpy.context.scene.objects
     selected_objects = bpy.context.selected_objects
-    active_objects = bpy.context.view_layer.objects.active
+    active_object = bpy.context.view_layer.objects.active
 
     objects = all_objects
     if ExportOptions.selection_only:
@@ -95,7 +95,17 @@ def do_export(filepath):
         aa = get_polygon_obj_matrix(obj)
         __export_polygons(obj, aa, part_lines)
 
-    sorted_part_lines = sorted(part_lines, key=lambda pl: (int(pl[1]), int(pl[0])))
+    def sort_key(pl):
+        try:
+            v1 = int(pl[1])
+            is_int = 0  # ints first (or you can use 1 if you want them last)
+        except ValueError:
+            v1 = str(pl[1])
+            is_int = 1  # non-ints after ints; remove this if you don't care
+
+        return is_int, v1, int(pl[0])
+
+    sorted_part_lines = sorted(part_lines, key=sort_key)
 
     current_color_code = None
     joined_part_lines = []
@@ -124,7 +134,7 @@ def do_export(filepath):
         if not obj.select_get():
             obj.select_set(True)
 
-    bpy.context.view_layer.objects.active = active_objects
+    bpy.context.view_layer.objects.active = active_object
 
 
 # if object wasn't imported, export it directly
