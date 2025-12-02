@@ -57,6 +57,8 @@ def create_edge_mesh(key, geometry_data):
         helpers.finish_mesh(mesh)
         __scale_mesh(mesh)
 
+        mesh.transform(matrices.rotation_matrix)
+
     return mesh
 
 
