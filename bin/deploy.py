@@ -2,7 +2,6 @@ import os
 import sys
 import pathlib
 from shutil import copytree, rmtree
-from definitions import APP_ROOT
 
 
 version = sys.argv[1]
@@ -26,6 +25,7 @@ if not os.path.isdir(blender_dir):
 print(f"deploying to {target}")
 
 if os.path.isdir(target):
+    print("removing old deployment from ", target)
     rmtree(target)
 
 
@@ -59,4 +59,5 @@ patterns = [
     "requirements.txt",
 ]
 
-copytree(APP_ROOT, target, dirs_exist_ok=True, ignore=callbackIgnore(patterns))
+print("Copying ", os.getcwd(), " to ", target)
+copytree(os.getcwd(), target, dirs_exist_ok=True, ignore=callbackIgnore(patterns))
