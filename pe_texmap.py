@@ -7,37 +7,19 @@ class PETexPath:
         self.tex_infos = []
         self.tex_info = None
 
-    def build_pe_texmap(self, child_node, vertices, matrix):
+    def build_pe_texmap(self, child_node, matrix, vertices):
         pe_texmaps = []
-
-        clean_line = child_node.line
-        _params = clean_line.split()[2:]
-
-        # child_node is a 3 or 4 line
-        vert_count = len(vertices)
 
         for tex_info in self.tex_infos:
             # if we have uv data and a pe_tex_info, otherwise pass
             # # custom minifig head > 3626tex.dat (has no pe_tex) > 3626texpole.dat (has no uv data)
-            if len(_params) == 15:  # use uvs provided in file
+            if len(child_node.uvs) > 0:  # use uvs provided in file
                 pe_texmap = PETexmap()
                 pe_texmap.image_name = tex_info.image_name
-
-                for i in range(vert_count):
-                    if vert_count == 3:
-                        x = round(float(_params[i * 2 + 9]), 3)
-                        y = round(float(_params[i * 2 + 10]), 3)
-                        uv = mathutils.Vector((x, y))
-                        pe_texmap.uvs.append(uv)
-                    elif vert_count == 4:
-                        x = round(float(_params[i * 2 + 11]), 3)
-                        y = round(float(_params[i * 2 + 12]), 3)
-                        uv = mathutils.Vector((x, y))
-                        pe_texmap.uvs.append(uv)
-
+                pe_texmap.uvs = child_node.uvs.copy()
                 pe_texmaps.append(pe_texmap)
 
-            elif tex_info.matrix is not None:
+            elif tex_info.matrix is not None:  # boundingbox provided
                 pe_texmap = PETexmap()
                 pe_texmap.image_name = tex_info.image_name
 
@@ -94,6 +76,8 @@ class PETexInfo:
         self.matrix = None
         self.matrix_inverse = None
         self.image_name = None
+
+        self.uvs = None  # uvs included in the file
 
         self.point_min = None  # bottom corner of bounding box
         self.point_max = None  # top corner of bounding box

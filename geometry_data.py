@@ -3,16 +3,28 @@ class FaceData:
     Raw vertex information
     """
 
-    def __init__(self, vertices, color_code, texmap=None, pe_texmaps=None):
-        self.vertices = vertices
+    def __init__(self, child_node, matrix, color_code, winding=None, texmap=None, pe_tex_path=None):
+        self.child_node = child_node
+        self.matrix = matrix
         self.color_code = color_code
+        self.winding = winding
         self.texmap = texmap
-        self.pe_texmaps = pe_texmaps
+        self.pe_tex_path = pe_tex_path
+
+        self.vertices = None
+        self.pe_texmaps = []
+
+    def process(self):
+        self.vertices = FaceData.transform_vertices(self.child_node, self.matrix, self.winding)
+
+        # TODO: this probably need to be done after the mesh is fully built so that the texture projection works properly
+        if self.pe_tex_path is not None:
+            self.pe_texmaps = self.pe_tex_path.build_pe_texmap(self.child_node, self.matrix, self.vertices)
 
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L219
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L260
     @staticmethod
-    def transform_vertices(child_node, matrix, winding):
+    def transform_vertices(child_node, matrix, winding=None):
         vertices = child_node.vertices
         vert_count = len(vertices)
 
@@ -56,22 +68,35 @@ class GeometryData:
         self.face_data = []
         self.line_data = []
 
-    def add_edge_data(self, vertices, color_code):
-        self.edge_data.append(FaceData(
-            vertices=vertices,
+    def add_edge_data(self, child_node, matrix, color_code):
+        face_data = FaceData(
+            child_node=child_node,
+            matrix=matrix,
             color_code=color_code,
-        ))
+        )
 
-    def add_face_data(self, vertices, color_code, texmap=None, pe_texmaps=None):
-        self.face_data.append(FaceData(
-            vertices=vertices,
+        self.edge_data.append(face_data)
+        return face_data
+
+    def add_face_data(self, child_node, matrix, color_code, texmap=None, pe_tex_path=None, winding=None):
+        face_data = FaceData(
+            child_node=child_node,
+            matrix=matrix,
             color_code=color_code,
             texmap=texmap,
-            pe_texmaps=pe_texmaps,
-        ))
+            pe_tex_path=pe_tex_path,
+            winding=winding,
+        )
 
-    def add_line_data(self, vertices, color_code):
-        self.line_data.append(FaceData(
-            vertices=vertices,
+        self.face_data.append(face_data)
+        return face_data
+
+    def add_line_data(self, child_node, matrix, color_code):
+        face_data = FaceData(
+            child_node=child_node,
+            matrix=matrix,
             color_code=color_code,
-        ))
+        )
+
+        self.line_data.append(face_data)
+        return face_data

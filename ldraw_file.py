@@ -621,6 +621,7 @@ class LDrawFile:
             ldraw_node.meta_command = _params[0]
             ldraw_node.color_code = _params[1]
             ldraw_node.vertices = self.__parse_face(_params)
+            ldraw_node.uvs = self.__parse_uvs(clean_line, _params[2:])
             self.child_nodes.append(ldraw_node)
             return True
         return False
@@ -650,6 +651,21 @@ class LDrawFile:
             vertex = mathutils.Vector((x, y, z))
             verts.append(vertex)
         return verts
+
+    @staticmethod
+    def __parse_uvs(clean_line, _parms):
+        uvs = []
+        if not clean_line.startswith("3 "): return uvs
+        if not len(_parms) == 15: return uvs
+
+        """line type 3 with uvs provided after the vertex definitions, 3 vertices and 2 floats per vertex"""
+        for i in range(3):
+            x = round(float(_parms[i * 2 + 9]), 3)
+            y = round(float(_parms[i * 2 + 10]), 3)
+            uv = mathutils.Vector((x, y))
+            uvs.append(uv)
+
+        return uvs
 
     # if there's a line type specified, determine what that type is
     @staticmethod

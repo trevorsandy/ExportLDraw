@@ -37,6 +37,7 @@ class LDrawNode:
         self.color_code = "16"
         self.matrix = matrices.identity_matrix
         self.vertices = []
+        self.uvs = []
         self.meta_command = None
         self.meta_args = {}
 
@@ -234,33 +235,30 @@ class LDrawNode:
                             child_node=child_node,
                         )
                     elif child_node.meta_command == "2":
-                        ldraw_meta.meta_edge(
+                        geometry_data.add_edge_data(
                             child_node=child_node,
-                            color_code=child_current_color,
                             matrix=child_matrix,
-                            geometry_data=geometry_data,
-                        )
+                            color_code=child_current_color,
+                        ).process()
                     elif child_node.meta_command in ["3", "4"]:
                         _winding = None
                         if bfc_certified and accum_cull and local_cull:
                             _winding = winding
 
-                        ldraw_meta.meta_face(
+                        geometry_data.add_face_data(
                             child_node=child_node,
-                            color_code=child_current_color,
                             matrix=child_matrix,
-                            geometry_data=geometry_data,
-                            winding=_winding,
+                            color_code=child_current_color,
+                            winding=winding,
                             texmap=texmap,
                             pe_tex_path=pe_tex_path,
-                        )
+                        ).process()
                     elif child_node.meta_command == "5":
-                        ldraw_meta.meta_line(
+                        geometry_data.add_line_data(
                             child_node=child_node,
-                            color_code=child_current_color,
                             matrix=child_matrix,
-                            geometry_data=geometry_data,
-                        )
+                            color_code=child_current_color,
+                        ).process()
                 elif child_node.meta_command == "bfc":
                     # does it make sense for models to have bfc info? maybe if that model has geometry, but then it would be treated like a part
                     if ImportOptions.meta_bfc:
@@ -324,11 +322,8 @@ class LDrawNode:
                         pe_tex_info.next_shear = next_shear
                         pe_tex_info.image_name = image.name
 
-                        # if there is 17, it defines the boundingbox
                         if len(_params) == 17:
-                            # defines a bounding box and its transformation
-                            # this doesn't work well with some very distorted texture applications
-                            # this also may be where PE_TEX_NEXT_SHEAR comes in
+                            """boundingbox determines projection matrix"""
 
                             (x, y, z, a, b, c, d, e, f, g, h, i) = map(float, _params[0:12])
                             matrix = mathutils.Matrix((
@@ -362,6 +357,8 @@ class LDrawNode:
                             pe_tex_info.point_max = point_max.freeze()
                             pe_tex_info.point_diff = point_diff.freeze()
                             pe_tex_info.camera_origin = camera_origin.freeze()
+                        elif len(_params) == 1:
+                            """this is the image data for the current tex_path"""
 
                         current_pe_tex_path.tex_infos.append(pe_tex_info)
                         current_pe_tex_path.tex_info = pe_tex_info

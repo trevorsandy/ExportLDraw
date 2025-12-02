@@ -3,9 +3,7 @@ import mathutils
 
 from . import matrices
 from .import_options import ImportOptions
-from .pe_texmap import PETexmap
 from .texmap import TexMap
-from .geometry_data import FaceData
 from . import group
 from . import helpers
 from . import ldraw_camera
@@ -431,36 +429,3 @@ def set_texmap_end(texmaps):
 # PE_TEX_NEXT_SHEAR is unknown
 # this may be where PE_TEX_NEXT_SHEAR comes in
 # is there a hardcoded or programmatically determined shear matrix?
-
-def meta_edge(child_node, color_code, matrix, geometry_data):
-    vertices = FaceData.transform_vertices(child_node, matrix, None)
-
-    geometry_data.add_edge_data(
-        vertices=vertices,
-        color_code=color_code,
-    )
-
-
-def meta_face(child_node, color_code, matrix, geometry_data, winding, texmap, pe_tex_path):
-    vertices = FaceData.transform_vertices(child_node, matrix, winding)
-
-    # TODO: this probably need to be done after the mesh is fully built so that the texture projection works properly
-    pe_texmaps = []
-    if pe_tex_path is not None:
-        pe_texmaps = pe_tex_path.build_pe_texmap(child_node, vertices, matrix)
-
-    geometry_data.add_face_data(
-        vertices=vertices,
-        color_code=color_code,
-        texmap=texmap,
-        pe_texmaps=pe_texmaps,
-    )
-
-
-def meta_line(child_node, color_code, matrix, geometry_data):
-    vertices = FaceData.transform_vertices(child_node, matrix, None)
-
-    geometry_data.add_line_data(
-        vertices=vertices,
-        color_code=color_code,
-    )
