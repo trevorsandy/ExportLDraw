@@ -1,5 +1,4 @@
 import mathutils
-from .geometry_data import FaceData
 
 
 class PETexPath:
@@ -8,14 +7,14 @@ class PETexPath:
         self.tex_infos = []
         self.tex_info = None
 
-    def build_pe_texmap(self, ldraw_node, child_node, winding):
-        # child_node is a 3 or 4 line
+    def build_pe_texmap(self, child_node, vertices, matrix):
+        pe_texmaps = []
+
         clean_line = child_node.line
         _params = clean_line.split()[2:]
 
-        vert_count = len(child_node.vertices)
-
-        pe_texmaps = []
+        # child_node is a 3 or 4 line
+        vert_count = len(vertices)
 
         for tex_info in self.tex_infos:
             # if we have uv data and a pe_tex_info, otherwise pass
@@ -42,7 +41,7 @@ class PETexPath:
                 pe_texmap = PETexmap()
                 pe_texmap.image_name = tex_info.image_name
 
-                (translation, rotation, box_extents) = (ldraw_node.matrix @ tex_info.matrix).decompose()
+                (translation, rotation, box_extents) = (matrix @ tex_info.matrix).decompose()
                 # print(tex_info.camera_origin)
 
                 # this is almost certainly not how it's supposed to be handled, but the end result is the same
@@ -56,32 +55,15 @@ class PETexPath:
 
                 rhs = mathutils.Matrix.LocRotScale(translation, rotation, mirroring)
 
-                matrix = ldraw_node.matrix.inverted() @ rhs
-                matrix_inverse = matrix.inverted()
+                # Do NOT override matrix here; use rhs as the composed matrix
+                composed_inverse = rhs.inverted()
+                local_vertices = [composed_inverse @ v for v in vertices]
 
-                vertices = [matrix_inverse @ v for v in child_node.vertices]
-
-                if winding == "CW":
-                    if vert_count == 3:
-                        vertices = [
-                            vertices[0],
-                            vertices[2],
-                            vertices[1],
-                        ]
-                    elif vert_count == 4:
-                        vertices = [
-                            vertices[0],
-                            vertices[3],
-                            vertices[2],
-                            vertices[1],
-                        ]
-                        FaceData.fix_bowties(vertices)
-
-                if not intersect(vertices, box_extents):
+                if not intersect(local_vertices, box_extents):
                     continue
 
-                ab = vertices[1] - vertices[0]
-                bc = vertices[2] - vertices[1]
+                ab = local_vertices[1] - local_vertices[0]
+                bc = local_vertices[2] - local_vertices[1]
                 face_normal = ab.cross(bc).normalized()
 
                 texture_normal = mathutils.Vector((0, -1, 0))
@@ -95,7 +77,7 @@ class PETexPath:
                 if dot <= 0.001:
                     continue
 
-                for vert in vertices:
+                for vert in local_vertices:
                     u = (vert.x - tex_info.point_min.x) / tex_info.point_diff.x
                     v = (vert.z - -tex_info.point_min.y) / -tex_info.point_diff.y
                     uv = mathutils.Vector((u, v))

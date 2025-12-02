@@ -246,7 +246,6 @@ class LDrawNode:
                             _winding = winding
 
                         ldraw_meta.meta_face(
-                            ldraw_node=self,
                             child_node=child_node,
                             color_code=child_current_color,
                             matrix=child_matrix,

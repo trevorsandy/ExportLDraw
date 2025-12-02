@@ -400,12 +400,15 @@ def set_texmap_end(texmaps):
 # what do we do when there is a tex_path -1 alongside tex_path >= 0?
 # how do we handle instances of 0, 0 1, 0 2, 0 1 2 - overlap?
 
+# ALL FIXED:
 # these parts don't render correctly - examples\bad_import
 # 4181pb014.dat - 23 is misplaced, has something to do with having 0 1 and 0 2 path
 # 15068pb046a.dat - texture is smeared, has something to do with PE_TEX_NEXT_SHEAR
 # 10202pb021.dat - texture shows on top and bottom and the entire under side, has something to do with having a 0 and -1 path
 # 10202pb022.dat - texture shows on top and bottom and sides, has something to do with having a 0 and -1 path
 # x.dat - multiple rendering errors, likely due to PE_TEX_NEXT_SHEAR and overlapping paths
+# STILL NOT WORKING CORRECTLY:
+# bl_36036pb045.dat - texture shows on the inside of the part because the projection is being done before the part is complete
 
 # apply to all lines (polygons only?) of this file and subfiles that have uv coordinates in their polygon definitions
 # 0 PE_TEX_PATH -1
@@ -438,11 +441,13 @@ def meta_edge(child_node, color_code, matrix, geometry_data):
     )
 
 
-def meta_face(ldraw_node, child_node, color_code, matrix, geometry_data, winding, texmap, pe_tex_path):
+def meta_face(child_node, color_code, matrix, geometry_data, winding, texmap, pe_tex_path):
     vertices = FaceData.handle_vertex_winding(child_node, matrix, winding)
+
+    # TODO: this probably need to be done after the mesh is fully built so that the texture projection works properly
     pe_texmaps = []
     if pe_tex_path is not None:
-        pe_texmaps = pe_tex_path.build_pe_texmap(ldraw_node, child_node, winding)
+        pe_texmaps = pe_tex_path.build_pe_texmap(child_node, vertices, matrix)
 
     geometry_data.add_face_data(
         vertices=vertices,
