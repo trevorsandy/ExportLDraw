@@ -12,44 +12,21 @@ class FaceData:
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L219
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L260
     @staticmethod
-    def handle_vertex_winding(child_node, matrix, winding):
-        vert_count = len(child_node.vertices)
+    def transform_vertices(child_node, matrix, winding):
+        vertices = child_node.vertices
+        vert_count = len(vertices)
 
-        vertices = []
-        if winding == "CW":
+        if winding == "CW":  # else winding == "CCW" or winding is None:
             if vert_count == 3:
-                vertices = [
-                    child_node.vertices[0],
-                    child_node.vertices[2],
-                    child_node.vertices[1],
-                ]
-                vertices = [matrix @ v for v in vertices]
+                vertices = [vertices[0], vertices[2], vertices[1]]
             elif vert_count == 4:
-                vertices = [
-                    child_node.vertices[0],
-                    child_node.vertices[3],
-                    child_node.vertices[2],
-                    child_node.vertices[1],
-                ]
-                vertices = [matrix @ v for v in vertices]
-                FaceData.fix_bowties(vertices)
-        else:  # winding == "CCW" or winding is None:
-            if vert_count == 3:
-                vertices = [
-                    child_node.vertices[0],
-                    child_node.vertices[1],
-                    child_node.vertices[2],
-                ]
-                vertices = [matrix @ v for v in vertices]
-            elif vert_count == 4:
-                vertices = [
-                    child_node.vertices[0],
-                    child_node.vertices[1],
-                    child_node.vertices[2],
-                    child_node.vertices[3],
-                ]
-                vertices = [matrix @ v for v in vertices]
-                FaceData.fix_bowties(vertices)
+                vertices = [vertices[0], vertices[3], vertices[2], vertices[1]]
+
+        vertices = [matrix @ v for v in vertices]
+
+        # line type 5 also has 4 vertices
+        if child_node.meta_command in ["4"] and vert_count == 4:
+            FaceData.fix_bowties(vertices)
 
         return vertices
 

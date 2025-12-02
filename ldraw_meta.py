@@ -433,7 +433,7 @@ def set_texmap_end(texmaps):
 # is there a hardcoded or programmatically determined shear matrix?
 
 def meta_edge(child_node, color_code, matrix, geometry_data):
-    vertices = [matrix @ v for v in child_node.vertices]
+    vertices = FaceData.transform_vertices(child_node, matrix, None)
 
     geometry_data.add_edge_data(
         vertices=vertices,
@@ -442,7 +442,7 @@ def meta_edge(child_node, color_code, matrix, geometry_data):
 
 
 def meta_face(child_node, color_code, matrix, geometry_data, winding, texmap, pe_tex_path):
-    vertices = FaceData.handle_vertex_winding(child_node, matrix, winding)
+    vertices = FaceData.transform_vertices(child_node, matrix, winding)
 
     # TODO: this probably need to be done after the mesh is fully built so that the texture projection works properly
     pe_texmaps = []
@@ -458,7 +458,7 @@ def meta_face(child_node, color_code, matrix, geometry_data, winding, texmap, pe
 
 
 def meta_line(child_node, color_code, matrix, geometry_data):
-    vertices = [matrix @ v for v in child_node.vertices]
+    vertices = FaceData.transform_vertices(child_node, matrix, None)
 
     geometry_data.add_line_data(
         vertices=vertices,
