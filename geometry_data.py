@@ -68,35 +68,36 @@ class GeometryData:
         self.face_data = []
         self.line_data = []
 
+    def process(self):
+        for edge_data in self.edge_data:
+            edge_data.process()
+
+        for face_data in self.face_data:
+            face_data.process()
+
+        for line_data in self.line_data:
+            line_data.process()
+
     def add_edge_data(self, child_node, matrix, color_code):
-        face_data = FaceData(
+        self.edge_data.append(FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
-        )
-
-        self.edge_data.append(face_data)
-        return face_data
+        ))
 
     def add_face_data(self, child_node, matrix, color_code, texmap=None, pe_tex_path=None, winding=None):
-        face_data = FaceData(
+        self.face_data.append(FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
             texmap=texmap,
             pe_tex_path=pe_tex_path,
             winding=winding,
-        )
-
-        self.face_data.append(face_data)
-        return face_data
+        ))
 
     def add_line_data(self, child_node, matrix, color_code):
-        face_data = FaceData(
+        self.line_data.append(FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
-        )
-
-        self.line_data.append(face_data)
-        return face_data
+        ))
