@@ -252,6 +252,12 @@ def __export_polygons(obj, aa, lines):
     if obj.type != 'MESH':
         return False
 
+    obj_color_code = obj.ldraw_props.color_code
+    if obj_color_code == "" or obj_color_code is None:
+        print(f"Object {obj.name} does not have a color_code")
+        return False
+    obj_color = LDrawColor.get_color(obj_color_code)
+
     mesh = __clean_mesh(obj)
 
     precision = obj.ldraw_props.export_precision
@@ -272,12 +278,6 @@ def __export_polygons(obj, aa, lines):
             line_type = "4"
         if line_type is None:
             continue
-
-        obj_color_code = obj.ldraw_props.color_code
-        if obj_color_code == "" or obj_color_code is None:
-            print(f"Object {obj.name} does not have a color_code")
-            return
-        obj_color = LDrawColor.get_color(obj_color_code)
 
         color_code = "16"
         color = LDrawColor.get_color(color_code)
