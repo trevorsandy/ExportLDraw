@@ -75,15 +75,29 @@ def __process_bmesh(mesh, geometry_data, color_code):
     helpers.finish_mesh(mesh)
 
 
+def __build_kd_tree(verts):
+    kd = mathutils.kdtree.KDTree(len(verts))
+    for i, v in enumerate(verts):
+        kd.insert(v.co, i)
+    kd.balance()
+    return kd
+
+
+def __get_edges(kd, edge_data, distance):
+    edges0 = [index for (co, index, dist) in kd.find_range(edge_data.vertices[0], distance)]
+    edges1 = [index for (co, index, dist) in kd.find_range(edge_data.vertices[1], distance)]
+    return edges0, edges1
+
+
 # bpy.context.object.data.edges[6].use_edge_sharp = True
 # Create kd tree for fast "find nearest points" calculation
 # https://docs.blender.org/api/blender_python_api_current/mathutils.kdtree.html
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html
 def __get_edge_indices(verts, geometry_data):
-    kd = mathutils.kdtree.KDTree(len(verts))
-    for i, v in enumerate(verts):
-        kd.insert(v.co, i)
-    kd.balance()
+    edge_indices = set()
+    if len(geometry_data.edge_data) < 1: return edge_indices
+
+    kd = __build_kd_tree(verts)
 
     # increase the distance to look for edges to merge
     # merge line type 2 edges at a greater distance than mesh edges
@@ -92,16 +106,8 @@ def __get_edge_indices(verts, geometry_data):
     distance = ImportOptions.merge_distance
     distance = ImportOptions.merge_distance * 2.1
 
-    edge_indices = set()
-
     for edge_data in geometry_data.edge_data:
-        edge_verts = []
-        # for vertex in edge_data.vertices[0:2]:  # in case line_data is being used since it has 4 verts
-        for vertex in edge_data.vertices:
-            edge_verts.append(vertex)
-
-        edges0 = [index for (co, index, dist) in kd.find_range(edge_verts[0], distance)]
-        edges1 = [index for (co, index, dist) in kd.find_range(edge_verts[1], distance)]
+        edges0, edges1 = __get_edges(kd, edge_data, distance)
         for e0 in edges0:
             for e1 in edges1:
                 edge_indices.add((e0, e1))
@@ -177,38 +183,71 @@ def __clean_bmesh(bm):
 
 def __process_mesh_sharp_edges(mesh, geometry_data):
     if ImportOptions.smooth_type_value() == "edge_split" or ImportOptions.use_freestyle_edges or ImportOptions.bevel_edges:
-        edge_indices = __get_edge_indices(mesh.vertices, geometry_data)
-
         # If we need bevel edges, get a reference to the attribute data
         # so we can assign bevel weights by index.
-        bevel_attr_data = None
-        if ImportOptions.bevel_edges:
-            if bpy.app.version < (4, 3):
-                pass
-            else:
-                if "bevel_weight_edge" not in mesh.attributes:
-                    mesh.attributes.new(name="bevel_weight_edge", type='FLOAT', domain='EDGE')
-                bevel_attr_data = mesh.attributes["bevel_weight_edge"]
+        bevel_attr_data = __ensure_bevel_weight(mesh)
 
-        # we need i for indexing
-        # Original code was: for edge in mesh.edges:
-        # We'll use enumerate to index the edges for attribute assignment
-        for i, edge in enumerate(mesh.edges):
-            v0 = edge.vertices[0]
-            v1 = edge.vertices[1]
-            if (v0, v1) in edge_indices:
-                if ImportOptions.smooth_type_value() == "edge_split":
-                    edge.use_edge_sharp = True
-                if ImportOptions.use_freestyle_edges:
-                    edge.use_freestyle_mark = True
+        # Build lists of flags/values in one pass
+        sharp_flags = []
+        freestyle_flags = [] if bpy.app.version < (4, 3) else None
+        bevel_weights = [] if bpy.app.version < (4, 3) else None
+        attr_weights = [] if bevel_attr_data else None
 
-                if ImportOptions.bevel_edges:
-                    if bpy.app.version < (4, 3):
-                        edge.bevel_weight = ImportOptions.bevel_weight
-                    else:
-                        if bevel_attr_data is not None:
-                            # Instead of using edge.bevel_weight, we now assign the value to the attribute
-                            bevel_attr_data.data[i].value = ImportOptions.bevel_weight
+        __process_edges(mesh, geometry_data, sharp_flags, freestyle_flags, bevel_weights, attr_weights)
+        __set_edge_foreach_set(mesh, sharp_flags, freestyle_flags, bevel_weights, attr_weights, bevel_attr_data)
+
+
+def __ensure_bevel_weight(mesh):
+    bevel_attr_data = None
+    if bpy.app.version < (4, 3):
+        pass
+    else:
+        if "bevel_weight_edge" not in mesh.attributes:
+            mesh.attributes.new(name="bevel_weight_edge", type='FLOAT', domain='EDGE')
+        bevel_attr_data = mesh.attributes["bevel_weight_edge"]
+    return bevel_attr_data
+
+
+def __process_edges(mesh, geometry_data, sharp_flags, freestyle_flags, bevel_weights, attr_weights):
+    edge_indices = __get_edge_indices(mesh.vertices, geometry_data)
+    for edge in mesh.edges:
+        __process_edge(edge, edge_indices, sharp_flags, freestyle_flags, bevel_weights, attr_weights)
+
+
+def __is_special(edge, edge_indices):
+    v0, v1 = edge.vertices[0], edge.vertices[1]
+    is_special = (v0, v1) in edge_indices
+    return is_special
+
+
+def __process_edge(edge, edge_indices, sharp_flags, freestyle_flags, bevel_weights, attr_weights):
+    is_special = __is_special(edge, edge_indices)
+
+    if ImportOptions.smooth_type_value() == "edge_split":
+        sharp_flags.append(is_special)
+
+    if ImportOptions.use_freestyle_edges:
+        if freestyle_flags:
+            freestyle_flags.append(is_special)
+
+    if ImportOptions.bevel_edges:
+        weight = ImportOptions.bevel_weight if is_special else 0.0
+        if bevel_weights:
+            bevel_weights.append(weight)
+        elif attr_weights:
+            attr_weights.append(weight)
+
+
+# Bulk set the properties
+def __set_edge_foreach_set(mesh, sharp_flags, freestyle_flags, bevel_weights, attr_weights, bevel_attr_data):
+    if sharp_flags:
+        mesh.edges.foreach_set("use_edge_sharp", sharp_flags)
+    if freestyle_flags:
+        mesh.edges.foreach_set("use_freestyle_mark", freestyle_flags)
+    if bevel_weights:
+        mesh.edges.foreach_set("bevel_weight", bevel_weights)
+    if attr_weights:
+        bevel_attr_data.data.foreach_set("value", attr_weights)
 
 
 def __process_mesh(mesh):

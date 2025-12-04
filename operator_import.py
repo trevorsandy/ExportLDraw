@@ -282,6 +282,24 @@ class IMPORT_OT_do_ldraw_import(bpy.types.Operator):
         default=False
     )
 
+    print_errors: bpy.props.BoolProperty(
+        name="Print errors",
+        description="Print errors to console at the cost of performance",
+        **ImportSettings.settings_dict('print_errors'),
+    )
+
+    fix_bowties: bpy.props.BoolProperty(
+        name="Fix bowties",
+        description="Fix bad quads caused by bowties at the cost of performance",
+        **ImportSettings.settings_dict('fix_bowties'),
+    )
+
+    defer_processing: bpy.props.BoolProperty(
+        name="Defer processing",
+        description="Calculate vertex positions after part is parsed",
+        **ImportSettings.settings_dict('defer_processing'),
+    )
+
     bevel_edges: bpy.props.BoolProperty(
         name="Bevel edges",
         description="Bevel edges. Can cause some parts to render incorrectly",
@@ -393,7 +411,11 @@ class IMPORT_OT_do_ldraw_import(bpy.types.Operator):
 
         layout.separator(factor=space_factor)
         col = layout.column()
+        col.label(text="Performance")
         col.prop(self, "profile")
+        col.prop(self, "print_errors")
+        col.prop(self, "fix_bowties")
+        col.prop(self, "defer_processing")
 
         layout.separator(factor=space_factor)
         col = layout.column()

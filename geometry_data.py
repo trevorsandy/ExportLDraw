@@ -1,3 +1,6 @@
+from .import_options import ImportOptions
+
+
 class FaceData:
     """
     Raw vertex information
@@ -11,36 +14,46 @@ class FaceData:
         self.texmap = texmap
         self.pe_tex_path = pe_tex_path
 
-        self.vertices = None
+        self.vertices = self.child_node.vertices
+        self.vert_count = len(self.vertices)
         self.pe_texmaps = []
 
     def process(self):
-        self.vertices = FaceData.transform_vertices(self.child_node, self.matrix, self.winding)
-
-        # TODO: this probably need to be done after the mesh is fully built so that the texture projection works properly
-        if self.pe_tex_path is not None:
-            self.pe_texmaps = self.pe_tex_path.build_pe_texmap(self.child_node, self.matrix, self.vertices)
+        self.__transform_vertices()
+        self.__process_bowties()
+        self.__process_pe_tex_path()
 
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L219
     # https://github.com/rredford/LdrawToObj/blob/802924fb8d42145c4f07c10824e3a7f2292a6717/LdrawData/LdrawToData.cs#L260
-    @staticmethod
-    def transform_vertices(child_node, matrix, winding=None):
-        vertices = child_node.vertices
-        vert_count = len(vertices)
+    def __transform_vertices(self):
+        if self.winding == "CW":  # else winding == "CCW" or winding is None:
+            if self.vert_count == 3:
+                self.vertices = [
+                    self.vertices[0],
+                    self.vertices[2],
+                    self.vertices[1],
+                ]
+            elif self.vert_count == 4:
+                self.vertices = [
+                    self.vertices[0],
+                    self.vertices[3],
+                    self.vertices[2],
+                    self.vertices[1],
+                ]
 
-        if winding == "CW":  # else winding == "CCW" or winding is None:
-            if vert_count == 3:
-                vertices = [vertices[0], vertices[2], vertices[1]]
-            elif vert_count == 4:
-                vertices = [vertices[0], vertices[3], vertices[2], vertices[1]]
+        self.vertices = [self.matrix @ v for v in self.vertices]
 
-        vertices = [matrix @ v for v in vertices]
-
+    def __process_bowties(self):
         # line type 5 also has 4 vertices
-        if child_node.meta_command in ["4"] and vert_count == 4:
-            FaceData.fix_bowties(vertices)
+        if self.child_node.meta_command not in ["4"]: return
+        if ImportOptions.fix_bowties:
+            if self.vert_count == 4:
+                FaceData.fix_bowties(self.vertices)
 
-        return vertices
+    def __process_pe_tex_path(self):
+        # TODO: this probably needs to be done after the mesh is fully built so that the texture projection works properly
+        if self.pe_tex_path is None: return
+        self.pe_texmaps = self.pe_tex_path.build_pe_texmap(self.child_node, self.matrix, self.vertices)
 
     # handle bowtie quadrilaterals - 6582.dat
     # https://github.com/TobyLobster/ImportLDraw/pull/65/commits/3d8cebee74bf6d0447b616660cc989e870f00085
@@ -79,25 +92,31 @@ class GeometryData:
             line_data.process()
 
     def add_edge_data(self, child_node, matrix, color_code):
-        self.edge_data.append(FaceData(
+        face_data = FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
-        ))
+        )
+        self.edge_data.append(face_data)
+        return face_data
 
     def add_face_data(self, child_node, matrix, color_code, texmap=None, pe_tex_path=None, winding=None):
-        self.face_data.append(FaceData(
+        face_data = FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
             texmap=texmap,
             pe_tex_path=pe_tex_path,
             winding=winding,
-        ))
+        )
+        self.face_data.append(face_data)
+        return face_data
 
     def add_line_data(self, child_node, matrix, color_code):
-        self.line_data.append(FaceData(
+        face_data = FaceData(
             child_node=child_node,
             matrix=matrix,
             color_code=color_code,
-        ))
+        )
+        self.line_data.append(face_data)
+        return face_data

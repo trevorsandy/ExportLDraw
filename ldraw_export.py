@@ -260,12 +260,9 @@ def __export_polygons(obj, aa, lines):
     face_edge_maps = {}
     for polygon in mesh.polygons:
         # build list of edges and their shared faces
-        for ff in mesh.polygons:
-            if polygon.index == ff.index:
-                continue
-            for fek in polygon.edge_keys:
-                ek = edge_key(fek[0], fek[1])
-                face_edge_maps.setdefault(ek, set()).add(polygon.index)
+        for _ek in polygon.edge_keys:
+            ek = edge_key(_ek[0], _ek[1])
+            face_edge_maps.setdefault(ek, set()).add(polygon.index)
 
         length = len(polygon.vertices)
         line_type = None

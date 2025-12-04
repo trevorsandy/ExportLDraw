@@ -130,6 +130,12 @@ class ImportOptions:
     defaults["print_errors"] = False  # True False
     print_errors = defaults["print_errors"]
 
+    defaults["fix_bowties"] = False  # True False
+    fix_bowties = defaults["fix_bowties"]
+
+    defaults["defer_processing"] = True  # True False
+    defer_processing = defaults["defer_processing"]
+
     @staticmethod
     def scale_strategy_value():
         return ImportOptions.scale_strategy_choices[ImportOptions.scale_strategy][0]

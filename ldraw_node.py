@@ -235,17 +235,19 @@ class LDrawNode:
                             child_node=child_node,
                         )
                     elif child_node.meta_command == "2":
-                        geometry_data.add_edge_data(
+                        face_data = geometry_data.add_edge_data(
                             child_node=child_node,
                             matrix=child_matrix,
                             color_code=child_current_color,
                         )
+                        if not ImportOptions.defer_processing:
+                            face_data.process()
                     elif child_node.meta_command in ["3", "4"]:
                         _winding = None
                         if bfc_certified and accum_cull and local_cull:
                             _winding = winding
 
-                        geometry_data.add_face_data(
+                        face_data = geometry_data.add_face_data(
                             child_node=child_node,
                             matrix=child_matrix,
                             color_code=child_current_color,
@@ -253,12 +255,16 @@ class LDrawNode:
                             texmap=texmap,
                             pe_tex_path=pe_tex_path,
                         )
+                        if not ImportOptions.defer_processing:
+                            face_data.process()
                     elif child_node.meta_command == "5":
-                        geometry_data.add_line_data(
+                        face_data = geometry_data.add_line_data(
                             child_node=child_node,
                             matrix=child_matrix,
                             color_code=child_current_color,
                         )
+                        if not ImportOptions.defer_processing:
+                            face_data.process()
                 elif child_node.meta_command == "bfc":
                     # does it make sense for models to have bfc info? maybe if that model has geometry, but then it would be treated like a part
                     if ImportOptions.meta_bfc:
@@ -402,7 +408,8 @@ class LDrawNode:
                 geometry_data.key = geometry_data_key
                 geometry_data.file = self.file
                 geometry_data.bfc_certified = bfc_certified
-                geometry_data.process()
+                if ImportOptions.defer_processing:
+                    geometry_data.process()
                 LDrawNode.geometry_datas[geometry_data_key] = geometry_data
             geometry_data = LDrawNode.geometry_datas[geometry_data_key]
 
