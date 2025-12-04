@@ -17,6 +17,7 @@ class IMPORT_OT_do_ldraw_import(bpy.types.Operator):
     bl_label = "Import LDraw"
     bl_options = {'PRESET', 'UNDO'}
     filename_ext = ""
+    elapsed = 0
 
     filter_glob: bpy.props.StringProperty(
         name="Extensions",
@@ -360,6 +361,14 @@ class IMPORT_OT_do_ldraw_import(bpy.types.Operator):
 
     def execute(self, context):
         start = time.perf_counter()
+        IMPORT_OT_do_ldraw_import.elapsed = 0
+
+        print("")
+        print("======Import Start======")
+        print(self.filepath)
+        print(f"start: {start}")
+        print("===========================")
+        print("")
 
         # bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -386,12 +395,16 @@ class IMPORT_OT_do_ldraw_import(bpy.types.Operator):
         else:
             blender_import.do_import(bpy.path.abspath(self.filepath))
 
+        end = time.perf_counter()
+        elapsed = (end - start)
+        IMPORT_OT_do_ldraw_import.elapsed = elapsed
+
         print("")
         print("======Import Complete======")
         print(self.filepath)
         print(f"Part count: {LDrawNode.part_count}")
-        end = time.perf_counter()
-        elapsed = (end - start)
+        print(f"start: {start}")
+        print(f"end: {end}")
         print(f"elapsed: {elapsed}")
         print("===========================")
         print("")

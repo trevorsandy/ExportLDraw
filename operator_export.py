@@ -1,6 +1,7 @@
 import bpy
 from bpy_extras.io_utils import ExportHelper
 
+import os
 import time
 
 from .export_options import ExportOptions
@@ -16,6 +17,7 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
     bl_idname = "ldraw_exporter.export_operator"
     bl_label = "Export LDraw"
     bl_options = {'PRESET'}
+    elapsed = 0
 
     # TODO: set export filename to current obj ldraw part_name
     # TODO: export polygons as individual parts
@@ -104,6 +106,12 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
         ],
     )
 
+    profile: bpy.props.BoolProperty(
+        name="Profile",
+        description="Profile import performance",
+        default=False
+    )
+
     # resolution: bpy.props.EnumProperty(
     #     name="Part resolution",
     #     options={'HIDDEN'},
@@ -118,6 +126,7 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         start = time.perf_counter()
+        EXPORT_OT_do_ldraw_export.elapsed = 0
 
         # bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -134,13 +143,31 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
         ExportOptions.triangulate = self.triangulate
         ExportOptions.ngon_handling = self.ngon_handling
 
-        ldraw_export.do_export(bpy.path.abspath(self.filepath))
+        if self.profile:
+            import cProfile
+            import pstats
+
+            from pathlib import Path
+            prof_output = os.path.join(Path.home(), 'export_ldraw_export.prof')
+
+            with cProfile.Profile() as profiler:
+                ldraw_export.do_export(bpy.path.abspath(self.filepath))
+            stats = pstats.Stats(profiler)
+            stats.sort_stats(pstats.SortKey.TIME)
+            stats.print_stats()
+            stats.dump_stats(filename=prof_output)
+        else:
+            ldraw_export.do_export(bpy.path.abspath(self.filepath))
+
+        end = time.perf_counter()
+        elapsed = (end - start)
+        EXPORT_OT_do_ldraw_export.elapsed = elapsed
 
         print("")
         print("======Export Complete======")
         print(self.filepath)
-        end = time.perf_counter()
-        elapsed = (end - start)
+        print(f"start: {start}")
+        print(f"end: {end}")
         print(f"elapsed: {elapsed}")
         print("===========================")
         print("")
@@ -159,6 +186,11 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.label(text="File Format:")
         row.prop(self, "filename_ext", expand=True)
+
+        layout.separator(factor=space_factor)
+        col = layout.column()
+        col.label(text="Performance")
+        col.prop(self, "profile")
 
         layout.separator(factor=space_factor)
         col = layout.column()
