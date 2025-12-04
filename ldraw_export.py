@@ -290,10 +290,7 @@ def __export_polygons(obj, aa, lines):
                     color_code = str(material[strings.ldraw_color_code_key])
                     color = LDrawColor.get_color(color_code)
 
-        if color.code != "16":
-            color_code = color.code
-        else:
-            color_code = obj_color.code
+        color_code = helpers.determine_color(obj_color.code, color.code)
 
         line = [line_type, color_code]
         for v in polygon.vertices:

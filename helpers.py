@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 from .import_options import ImportOptions
 
+
 try:
     from .definitions import APP_ROOT
 except ImportError as e:
@@ -51,6 +52,15 @@ def parse_csv_line(line, min_params=0):
     while len(_params) < min_params:
         _params.append("")
     return _params
+
+
+# set the working color code to this file's
+# color code if it isn't color code 16
+def determine_color(parent_color_code, this_color_code):
+    color_code = this_color_code
+    if this_color_code == "16":
+        color_code = parent_color_code
+    return color_code
 
 
 def get_bytes(string):

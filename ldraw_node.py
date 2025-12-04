@@ -10,6 +10,7 @@ from . import ldraw_mesh
 from . import ldraw_object
 from . import ldraw_meta
 from . import matrices
+from . import helpers
 
 
 class LDrawNode:
@@ -183,7 +184,7 @@ class LDrawNode:
                 # texmap_fallback will only be true if ImportOptions.meta_texmap == True and you're on a fallback line
                 # if ImportOptions.meta_texmap == False, it will always be False
                 if child_node.meta_command in ["1", "2", "3", "4", "5"] and not texmap_fallback:
-                    child_current_color = LDrawNode.__determine_color(color_code, child_node.color_code)
+                    child_current_color = helpers.determine_color(color_code, child_node.color_code)
 
                     if child_node.meta_command == "1":
                         # don't pass -1 tex_paths since those are only meant for the current_node
@@ -439,15 +440,6 @@ class LDrawNode:
                 group.next_collection = None
 
             return obj
-
-    # set the working color code to this file's
-    # color code if it isn't color code 16
-    @staticmethod
-    def __determine_color(parent_color_code, this_color_code):
-        color_code = this_color_code
-        if this_color_code == "16":
-            color_code = parent_color_code
-        return color_code
 
     # must include matrix, so that parts that are just mirrored versions of other parts
     # such as 32527.dat (mirror of 32528.dat) will render
