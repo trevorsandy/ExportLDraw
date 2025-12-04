@@ -18,6 +18,7 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
     bl_label = "Export LDraw"
     bl_options = {'PRESET'}
     elapsed = 0
+    exported_string = None
 
     # TODO: set export filename to current obj ldraw part_name
     # TODO: export polygons as individual parts
@@ -151,13 +152,13 @@ class EXPORT_OT_do_ldraw_export(bpy.types.Operator, ExportHelper):
             prof_output = os.path.join(Path.home(), 'export_ldraw_export.prof')
 
             with cProfile.Profile() as profiler:
-                ldraw_export.do_export(bpy.path.abspath(self.filepath))
+                EXPORT_OT_do_ldraw_export.exported_string = ldraw_export.do_export(bpy.path.abspath(self.filepath))
             stats = pstats.Stats(profiler)
             stats.sort_stats(pstats.SortKey.TIME)
             stats.print_stats()
             stats.dump_stats(filename=prof_output)
         else:
-            ldraw_export.do_export(bpy.path.abspath(self.filepath))
+            EXPORT_OT_do_ldraw_export.exported_string = ldraw_export.do_export(bpy.path.abspath(self.filepath))
 
         end = time.perf_counter()
         elapsed = (end - start)

@@ -124,17 +124,23 @@ def do_export(filepath):
         joined_part_lines.append(" ".join(line))
     ldraw_file.lines.extend(joined_part_lines)
 
+    exported_lines = []
     with open(filepath, 'w', encoding='utf-8', newline="\n") as file:
         for line in ldraw_file.lines:
             file.write(line)
+            exported_lines.append(line)
             if line != "\n":
                 file.write("\n")
+                exported_lines.append("\n")
 
     for obj in selected_objects:
         if not obj.select_get():
             obj.select_set(True)
 
     bpy.context.view_layer.objects.active = active_object
+
+    exported_string = "".join(exported_lines)
+    return (ldraw_file.name, exported_string)
 
 
 # if object wasn't imported, export it directly
