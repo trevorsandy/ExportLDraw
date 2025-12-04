@@ -19,5 +19,5 @@ class ExportOptions:
     defaults["selection_only"] = True
     selection_only = defaults["selection_only"]
 
-    defaults["export_precision"] = 2
+    defaults["export_precision"] = 5
     export_precision = defaults["export_precision"]
