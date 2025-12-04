@@ -13,3 +13,4 @@ experiments/*
 brickset/*
 inc/tmp/*
 examples/bad_import/*
+*.sqlite
